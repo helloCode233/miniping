@@ -1,0 +1,31 @@
+[package]
+name = "miniping"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.0", features = ["derive"] }
+socket2 = "0.6"
+libc = "0.2.0"
+dns-lookup = "2.0.0"
+
+# Development build: cargo build --profile dev (default)
+#   fast compilation, debug info, no optimization
+
+# Release build: cargo build --release (or --profile release)
+#   balanced speed/size, strip symbols
+[profile.release]
+opt-level = 2
+lto = true
+strip = "symbols"
+codegen-units = 1
+
+# Production build: cargo build --profile production
+#   maximum size reduction, static musl binary for Linux
+[profile.production]
+inherits = "release"
+opt-level = "z"           # optimize for size (-Oz)
+lto = "fat"               # full link-time optimization
+codegen-units = 1
+strip = "symbols"
+panic = "abort"           # remove panic unwind machinery
