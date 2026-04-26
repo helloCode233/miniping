@@ -9,20 +9,7 @@ on:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-            artifact_name: miniping-linux-x86_64
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            artifact_name: miniping-macos
-          - os: windows-latest
-            target: x86_64-pc-windows-gnu
-            artifact_name: miniping-windows-x86_64.exe
-
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -30,20 +17,21 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-action@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: x86_64-unknown-linux-musl
 
       - name: Build
-        run: cargo build --release --profile production --target ${{ matrix.target }}
+        run: |
+          rustup target add x86_64-unknown-linux-musl
+          cargo build --release --profile production --target x86_64-unknown-linux-musl
 
-      - name: Strip (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: strip target/${{ matrix.target }}/release/miniping
+      - name: Strip
+        run: strip target/x86_64-unknown-linux-musl/release/miniping
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}
-          path: target/${{ matrix.target }}/release/miniping
+          name: miniping-linux-x86_64
+          path: target/x86_64-unknown-linux-musl/release/miniping
           retention-days: 30
 
   release:
@@ -54,11 +42,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download all artifacts
+      - name: Download artifact
         uses: actions/download-artifact@v4
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: miniping-*
+          files: miniping-linux-x86_64
           generate_release_notes: true
