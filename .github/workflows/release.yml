@@ -7,22 +7,32 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
     strategy:
       matrix:
         include:
           - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
             artifact_name: miniping-linux-x86_64
+            ext: tar.gz
           - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
             artifact_name: miniping-linux-aarch64
+            ext: tar.gz
           - target: x86_64-apple-darwin
+            os: macos-latest
             artifact_name: miniping-macos-x86_64
+            ext: tar.gz
           - target: aarch64-apple-darwin
+            os: macos-latest
             artifact_name: miniping-macos-aarch64
+            ext: tar.gz
           - target: x86_64-pc-windows-msvc
+            os: windows-latest
             artifact_name: miniping-windows-x86_64
+            ext: zip
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -45,19 +55,19 @@ jobs:
           fi
 
       - name: Create tarball (Linux/macOS)
-        if: matrix.target != 'x86_64-pc-windows-msvc'
+        if: matrix.ext == 'tar.gz'
         shell: bash
         run: tar czf ${{ matrix.artifact_name }}.tar.gz ${{ matrix.artifact_name }}
 
       - name: Create zip (Windows)
-        if: matrix.target == 'x86_64-pc-windows-msvc'
+        if: matrix.ext == 'zip'
         shell: bash
         run: powershell -Command "Compress-Archive -Path ${{ matrix.artifact_name }}.exe -DestinationPath ${{ matrix.artifact_name }}.zip"
 
       - name: Create checksums
         shell: bash
         run: |
-          if [ "${{ matrix.target }}" = "x86_64-pc-windows-msvc" ]; then
+          if [ "${{ matrix.ext }}" = "zip" ]; then
             sha256sum ${{ matrix.artifact_name }}.zip > checksums.txt
           else
             sha256sum ${{ matrix.artifact_name }}.tar.gz > checksums.txt
