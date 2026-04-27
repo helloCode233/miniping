@@ -18,7 +18,7 @@ jobs:
             os: ubuntu-latest
             artifact_name: miniping-linux-aarch64
             ext: tar.gz
-            needs_cross: true
+            linker: aarch64-linux-gnu-gcc
           - target: x86_64-apple-darwin
             os: macos-latest
             artifact_name: miniping-macos-x86_64
@@ -39,7 +39,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install cross compilation toolchain
-        if: matrix.needs_cross == 'true'
+        if: matrix.linker != ''
         run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
 
       - name: Install Rust
@@ -48,7 +48,13 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Build production profile
-        run: cargo build --profile production --target ${{ matrix.target }}
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: ${{ matrix.linker }}
+        run: |
+          if [ -n "$CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER" ]; then
+            export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER="$CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER"
+          fi
+          cargo build --profile production --target ${{ matrix.target }}
 
       - name: Prepare artifact
         shell: bash
