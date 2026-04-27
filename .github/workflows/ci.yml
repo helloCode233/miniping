@@ -51,13 +51,9 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Build production profile
+        run: cargo build --profile production --target ${{ matrix.target }}
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: ${{ matrix.linker }}
-        run: |
-          if [ -n "$CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER" ]; then
-            export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER="$CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER"
-          fi
-          cargo build --profile production --target ${{ matrix.target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
