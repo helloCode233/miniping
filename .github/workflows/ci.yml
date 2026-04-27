@@ -29,6 +29,7 @@ jobs:
             os: ubuntu-latest
           - target: aarch64-unknown-linux-musl
             os: ubuntu-latest
+            needs_cross: true
           - target: x86_64-apple-darwin
             os: macos-latest
           - target: aarch64-apple-darwin
@@ -39,6 +40,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install cross compilation toolchain
+        if: matrix.needs_cross == 'true'
+        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
